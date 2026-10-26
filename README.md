@@ -6,8 +6,13 @@ Windows Server 2022 Benchmark v2.0.0**, memperbaiki temuan yang menutup jalur
 serangan aktif, lalu membuktikan hasilnya dari dua sisi: **serangan** dan
 **compliance**.
 
-Proyek ini adalah kelanjutan dari lab deteksi serangan (Kerberoasting,
-AS-REP Roasting, Password Spraying) pada SIEM yang sama. Busur ceritanya:
+> **Lanjutan dari:** lab deteksi serangan Active Directory —
+> [wazuh-ad-threat-detection](https://github.com/Pratamaudin/wazuh-ad-threat-detection)
+> (Kerberoasting, AS-REP Roasting, Password Spraying di Wazuh SIEM).
+> Domain Controller dan akun `svc-sql` yang di-hardening di sini adalah mesin
+> yang sama yang diserang pada lab tersebut.
+
+Busur proyek:
 
 > **Serang → Audit → Perbaiki → Buktikan**
 
@@ -39,7 +44,8 @@ Scan pertama dijalankan pada mesin dalam kondisi default-lab yang rentan.
 | Total check | 359 |
 
 > _Scan selesai: 26 Okt 2026, 13:49_
-> _Screenshot: `screenshots/sca-baseline.png`_
+
+![SCA baseline](screenshots/sca-baseline.png)
 
 Skor 29% mencerminkan konfigurasi lab yang memang dilemahkan untuk keperluan
 latihan serangan. 254 kegagalan menjadi kumpulan temuan mentah; proyek ini
@@ -65,7 +71,8 @@ sebagai _future work_ (bagian 7).
 
 ## 4. Remediasi — #27061
 
-Semua perubahan diterapkan di **DC01**.
+Semua perubahan diterapkan di **DC01**. Perintah lengkap tersedia di
+[`remediation/harden-dc01.ps1`](remediation/harden-dc01.ps1).
 
 **Masalah.** Registry `SupportedEncryptionTypes` tidak diset, sehingga Domain
 Controller memakai default yang masih mengizinkan **RC4**. Akibatnya DC
@@ -132,8 +139,7 @@ agent identik. Permintaan tiket sesudah hardening tercatat sebagai _logon
 biasa_, bukan alert Kerberoasting, karena rule 100100 hanya cocok dengan
 `0x17`. Kerentanan tertutup, bukan deteksi yang rusak.
 
-> _Screenshot: `screenshots/before-after-comparison.png`_
-> _(menampilkan event `0x17` lama yang memicu rule 100100, berdampingan dengan event `0x12` baru yang tidak memicu alert)_
+![Before vs after encryption type](screenshots/before-after-comparison.png)
 
 ---
 
@@ -148,7 +154,8 @@ SCA dijalankan ulang sesudah remediasi.
 | Failed | 254 | 253 | −1 |
 
 > _Scan selesai: 26 Okt 2026, 14:27_
-> _Screenshot: `screenshots/sca-after.png`_
+
+![SCA after — #27061 Passed](screenshots/sca-after.png)
 
 **Check #27061: Failed → Passed.** SCA membaca registry, menemukan nilai
 `2147483640`, dan menyatakannya sesuai standar CIS.
@@ -216,5 +223,13 @@ Pertimbangan sebelum menerapkan di produksi:
 │   ├── before-after-comparison.png   # event 0x17 (alert) vs 0x12 (no alert)
 │   └── sca-after.png                 # #27061 Passed, skor sesudah
 └── remediation/
-    └── harden-dc01.ps1               # perintah fix #27061 (bagian 4)
+    └── harden-dc01.ps1               # perintah fix #27061
 ```
+
+---
+
+## Tools & referensi
+
+- Wazuh SCA · CIS Microsoft Windows Server 2022 Benchmark v2.0.0
+- Windows Server 2022 · Active Directory Domain Services
+- Event 4769 (Kerberos Service Ticket Operations) · MITRE ATT&CK T1558.003 (Kerberoasting)
